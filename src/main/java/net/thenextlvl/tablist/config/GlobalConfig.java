@@ -11,10 +11,10 @@ import java.util.Map;
  */
 public record GlobalConfig(
         @SerializedName("server") ServerConfig server,
+        @SerializedName("global-player-list") PlayerListConfig playerList,
         @SerializedName("server-groups") Map<String, String> serverGroups,
         @SerializedName("server-names") Map<String, String> serverNames,
         @SerializedName("groups") Map<String, TablistConfig> groups,
-        @SerializedName("global-player-list") boolean globalPlayerList,
         @SerializedName("refresh-time") long refreshTime
 ) {
     /**
