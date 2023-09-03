@@ -4,7 +4,19 @@
 
 > referencing config.json -> global-player-list
 
-The global player list will synchronize the tablist across the network
+The global player list synchronizes the tablist across the network
+
+```json
+{
+  "enabled": true,
+  "transparent": true,
+  "format": "<gray><player> <dark_gray>» <gray><current_server>"
+}
+```
+
+The `format` is how the player will be shown to others _(on different servers)_<br/>
+`transparent` shows the player list entry as spectator _(italic and kinda see-through)_
+
 
 ## Placeholders
 
@@ -19,6 +31,7 @@ For example to display the max amount of players use `<global_max>`
 | current_server        | the name of the current server                                  |
 | current_group_online  | the number of all players connected to the current server group |
 | current_group         | the name of the current server group                            |
+| player                | the name of the player                                          |
 | ping                  | the current ping of the player                                  |
 | server                | the name of the server                                          |
 | domain                | the domain of the server                                        |

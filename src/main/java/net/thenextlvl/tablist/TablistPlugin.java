@@ -14,11 +14,11 @@ import core.api.file.format.GsonFile;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.thenextlvl.tablist.config.GlobalConfig;
+import net.thenextlvl.tablist.config.PlayerListConfig;
 import net.thenextlvl.tablist.config.ServerConfig;
 import net.thenextlvl.tablist.config.TablistConfig;
 import net.thenextlvl.tablist.listener.ConnectionListener;
@@ -48,10 +48,10 @@ public class TablistPlugin {
         this.logger = logger;
         this.config = new GsonFile<>(new File("plugins/Tablist", "config.json"), new GlobalConfig(
                 getDefaultServerConfig(),
+                getDefaultPlayerListConfig(),
                 getDefaultServerGroups(),
                 getDefaultServerNames(),
                 getDefaultGroup(),
-                true,
                 TimeUnit.SECONDS.toMillis(5)
         )) {{
             if (!getFile().exists()) save();
@@ -113,26 +113,26 @@ public class TablistPlugin {
     }
 
     private void updateGlobalPlayerList(Player player, ServerInfo server) {
-        if (config().globalPlayerList()) server().getAllPlayers().forEach(all -> {
+        if (config().playerList().enabled()) server().getAllPlayers().forEach(all -> {
             if (all.equals(player)) return;
             all.getCurrentServer().map(ServerConnection::getServerInfo).ifPresent(info -> {
                 if (!server.equals(info)) getTablist(info).ifPresent(tab -> {
-                    if (!tab.hidePlayers()) addGlobalListEntry(player, all, info.getName());
-                    addGlobalListEntry(all, player, server.getName());
+                    if (!tab.hidePlayers()) addGlobalListEntry(player, all);
+                    addGlobalListEntry(all, player);
                 });
             });
         });
     }
 
-    private void addGlobalListEntry(Player player, Player viewed, String server) {
+    private void addGlobalListEntry(Player player, Player viewed) {
         player.getTabList().addEntry(TabListEntry.builder()
-                .displayName(Component.text(viewed.getUsername()).color(NamedTextColor.GRAY)
-                        .append(Component.text(" » ").color(NamedTextColor.DARK_GRAY))
-                        .append(Component.text(config().serverNames().getOrDefault(server, server))
-                                .color(NamedTextColor.GRAY)))
+                .displayName(miniMessage().deserialize(
+                        config().playerList().format(),
+                        tagResolver(viewed)
+                ))
+                .gameMode(config().playerList().transparent() ? 3 : 2)
                 .profile(viewed.getGameProfile())
                 .tabList(player.getTabList())
-                .gameMode(3)
                 .build());
     }
 
@@ -141,6 +141,12 @@ public class TablistPlugin {
                 "Example",
                 "example.com",
                 "example.com/discord"
+        );
+    }
+
+    private PlayerListConfig getDefaultPlayerListConfig() {
+        return new PlayerListConfig(
+                true, true, "<gray><player> <dark_gray>» <gray><current_server>"
         );
     }
 
@@ -162,22 +168,6 @@ public class TablistPlugin {
                 ));
     }
 
-    /*
-    global_online           -> all players connected to the proxy
-    global_max              -> max player count of the proxy
-
-    current_server_online   -> all players connected to the current server
-    current_server          -> name of the current server
-
-    current_group_online    -> all players connected to the current server group
-    current_group           -> name of the current server group
-
-    ping                    -> the current ping of the player
-
-    server                  -> the name of the server
-    domain                  -> the domain of the server
-    discord                 -> the discord of the server
-    */
     private Map<String, TablistConfig> getDefaultGroup() {
         return Map.of(GlobalConfig.GROUP, new TablistConfig(
                 "<newline><dark_gray>   )<gray><strikethrough>                <reset><dark_gray>[ <gray>• <white>" +
@@ -207,6 +197,7 @@ public class TablistPlugin {
                         .orElse(0)))),
                 TagResolver.resolver("current_group", Tag.inserting(Component.text(connectedGroup
                         .orElse("")))),
+                TagResolver.resolver("player", Tag.inserting(Component.text(player.getUsername()))),
                 TagResolver.resolver("ping", Tag.inserting(Component.text(Math.max(0, player.getPing()))))
         );
     }
