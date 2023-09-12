@@ -23,7 +23,7 @@ public class ConnectionListener {
         if (!event.getLoginStatus().equals(SUCCESSFUL_LOGIN)) return;
         plugin.server().getAllPlayers().forEach(player -> {
             plugin.updateTablist(player);
-            if (!plugin.config().playerList().enabled()) return;
+            if (!plugin.config().globalPlayerList().enabled()) return;
             player.getTabList().removeEntry(event.getPlayer().getUniqueId());
         });
     }

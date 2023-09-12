@@ -10,6 +10,7 @@ import com.google.gson.annotations.SerializedName;
 public record TablistConfig(
         @SerializedName("header") String header,
         @SerializedName("footer") String footer,
+        @SerializedName("player-format") String playerFormat,
         @SerializedName("hide-players") boolean hidePlayers
 ) {
 }

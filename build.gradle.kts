@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.thenextlvl.tablist"
-version = "1.1.0"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -13,6 +13,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("net.luckperms:api:5.4")
     compileOnly("org.projectlombok:lombok:1.18.28")
     compileOnly("com.velocitypowered:velocity-api:3.2.0-SNAPSHOT")
 

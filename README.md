@@ -17,25 +17,27 @@ The global player list synchronizes the tablist across the network
 The `format` is how the player will be shown to others _(on different servers)_<br/>
 `transparent` shows the player list entry as spectator _(italic and kinda see-through)_
 
-
 ## Placeholders
 
 You can integrate placeholders by typing `<tag>`<br/>
 For example to display the max amount of players use `<global_max>`
 
-| Tag                   | Description                                                     |
-|-----------------------|-----------------------------------------------------------------|
-| global_online         | the number of all players connected to the proxy                |
-| global_max            | the max player count of the proxy                               |
-| current_server_online | the number of all players connected to the current server       |
-| current_server        | the name of the current server                                  |
-| current_group_online  | the number of all players connected to the current server group |
-| current_group         | the name of the current server group                            |
-| player                | the name of the player                                          |
-| ping                  | the current ping of the player                                  |
-| server                | the name of the server                                          |
-| domain                | the domain of the server                                        |
-| discord               | the discord of the server                                       |
+| Tag                   | Description                                                     | Requires  |
+|-----------------------|-----------------------------------------------------------------|-----------|
+| prefix                | the prefix of the player                                        | LuckPerms |
+| suffix                | the suffix of the player                                        | LuckPerms |
+| group                 | the group of the player                                         | LuckPerms |
+| global_online         | the number of all players connected to the proxy                |           |
+| global_max            | the max player count of the proxy                               |           |
+| current_server_online | the number of all players connected to the current server       |           |
+| current_server        | the name of the current server                                  |           |
+| current_group_online  | the number of all players connected to the current server group |           |
+| current_group         | the name of the current server group                            |           |
+| player                | the name of the player                                          |           |
+| ping                  | the current ping of the player                                  |           |
+| server                | the name of the server                                          |           |
+| domain                | the domain of the server                                        |           |
+| discord               | the discord of the server                                       |           |
 
 ## Server/Tablist groups
 

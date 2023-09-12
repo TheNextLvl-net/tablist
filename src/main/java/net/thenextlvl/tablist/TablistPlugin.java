@@ -3,6 +3,7 @@ package net.thenextlvl.tablist;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -13,10 +14,10 @@ import com.velocitypowered.api.proxy.server.ServerInfo;
 import core.api.file.format.GsonFile;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import net.luckperms.api.LuckPermsProvider;
 import net.thenextlvl.tablist.config.GlobalConfig;
 import net.thenextlvl.tablist.config.PlayerListConfig;
 import net.thenextlvl.tablist.config.ServerConfig;
@@ -35,7 +36,18 @@ import java.util.stream.Collectors;
 
 @Getter
 @Accessors(fluent = true)
-@Plugin(id = "tablist", name = "Tablist", authors = "NonSwag", url = "https://thenextlvl.net", version = "1.0.0")
+@Plugin(id = "tablist",
+        name = "Tablist",
+        authors = "NonSwag",
+        url = "https://thenextlvl.net",
+        // version = "${version}", // figure out how to do that
+        version = "1.1.2",
+        dependencies = {
+                @Dependency(
+                        id = "luckperms",
+                        optional = true
+                )
+        })
 public class TablistPlugin {
     private final MiniMessage miniMessage;
     private final GlobalConfig config;
@@ -57,11 +69,11 @@ public class TablistPlugin {
             if (!getFile().exists()) save();
         }}.getRoot();
         this.miniMessage = MiniMessage.builder().tags(TagResolver.builder()
-                .tag("global_online", (argument, context) -> Tag.inserting(Component.text(server().getPlayerCount())))
-                .tag("global_max", Tag.inserting(Component.text(server().getConfiguration().getShowMaxPlayers())))
-                .tag("server", Tag.inserting(Component.text(config().server().name())))
-                .tag("domain", Tag.inserting(Component.text(config().server().domain())))
-                .tag("discord", Tag.inserting(Component.text(config().server().discord())))
+                .tag("global_online", (argument, context) -> Tag.preProcessParsed(String.valueOf(server().getPlayerCount())))
+                .tag("global_max", Tag.preProcessParsed(String.valueOf(server().getConfiguration().getShowMaxPlayers())))
+                .tag("server", Tag.preProcessParsed(config().server().name()))
+                .tag("domain", Tag.preProcessParsed(config().server().domain()))
+                .tag("discord", Tag.preProcessParsed(config().server().discord()))
                 .resolver(TagResolver.standard())
                 .build()
         ).build();
@@ -85,6 +97,7 @@ public class TablistPlugin {
                     var footer = miniMessage().deserialize(tablist.footer(), tagResolver);
                     player.sendPlayerListHeaderAndFooter(header, footer);
                     if (!tablist.hidePlayers()) updateGlobalPlayerList(player, server);
+                    updateLocalPlayerList(player, tablist);
                 }));
     }
 
@@ -112,8 +125,25 @@ public class TablistPlugin {
         return online.get();
     }
 
+    private void updateLocalPlayerList(Player player, TablistConfig tablist) {
+        if (tablist.playerFormat() == null || tablist.playerFormat().isBlank()) return;
+        server().getAllPlayers().forEach(all -> {
+            addLocalPlayerListEntry(player, all, tablist.playerFormat());
+            if (!all.equals(player)) addLocalPlayerListEntry(all, player, tablist.playerFormat());
+        });
+    }
+
+    private void addLocalPlayerListEntry(Player player, Player viewed, String format) {
+        player.getTabList().getEntry(viewed.getUniqueId()).orElse(TabListEntry.builder()
+                        .profile(viewed.getGameProfile())
+                        .tabList(player.getTabList())
+                        .build())
+                .setDisplayName(miniMessage().deserialize(format, tagResolver(viewed)))
+                .setLatency((int) Math.max(0, viewed.getPing()));
+    }
+
     private void updateGlobalPlayerList(Player player, ServerInfo server) {
-        if (config().playerList().enabled()) server().getAllPlayers().forEach(all -> {
+        if (config().globalPlayerList().enabled()) server().getAllPlayers().forEach(all -> {
             if (all.equals(player)) return;
             all.getCurrentServer().map(ServerConnection::getServerInfo).ifPresent(info -> {
                 if (!server.equals(info)) getTablist(info).ifPresent(tab -> {
@@ -125,15 +155,17 @@ public class TablistPlugin {
     }
 
     private void addGlobalListEntry(Player player, Player viewed) {
-        player.getTabList().addEntry(TabListEntry.builder()
-                .displayName(miniMessage().deserialize(
-                        config().playerList().format(),
+        player.getTabList().getEntry(viewed.getUniqueId())
+                .orElse(TabListEntry.builder()
+                        .profile(viewed.getGameProfile())
+                        .tabList(player.getTabList())
+                        .build())
+                .setDisplayName(miniMessage().deserialize(
+                        config().globalPlayerList().format(),
                         tagResolver(viewed)
                 ))
-                .gameMode(config().playerList().transparent() ? 3 : 2)
-                .profile(viewed.getGameProfile())
-                .tabList(player.getTabList())
-                .build());
+                .setGameMode(config().globalPlayerList().transparent() ? 3 : 2)
+                .setLatency((int) Math.max(0, viewed.getPing()));
     }
 
     private ServerConfig getDefaultServerConfig() {
@@ -178,27 +210,46 @@ public class TablistPlugin {
                         "<dark_gray>» <aqua><discord><newline><dark_gray><newline><dark_gray>)<gray><strikethrough>" +
                         "                <reset><dark_gray>[ <gray>• <white><server> <gray>• <dark_gray>" +
                         "]<gray><strikethrough>                <reset><dark_gray>(<newline>",
+                "<prefix><player><suffix>",
                 false
         ));
     }
 
     private TagResolver tagResolver(Player player) {
+        return luckResolver(player).resolvers(playerResolver(player)).build();
+    }
+
+    private TagResolver playerResolver(Player player) {
         var connectedServer = player.getCurrentServer().map(ServerConnection::getServer);
         var connectedGroup = connectedServer.flatMap(server -> getGroup(server.getServerInfo()));
-        return TagResolver.resolver(
-                TagResolver.resolver("current_server_online", Tag.inserting(Component.text(connectedServer
+        return TagResolver.builder().resolvers(
+                TagResolver.resolver("current_server_online", Tag.preProcessParsed(String.valueOf(connectedServer
                         .map(server -> server.getPlayersConnected().size())
                         .orElse(0)))),
-                TagResolver.resolver("current_server", Tag.inserting(Component.text(connectedServer
+                TagResolver.resolver("current_server", Tag.preProcessParsed(connectedServer
                         .map(server -> config().serverNames().get(server.getServerInfo().getName()))
-                        .orElse("...")))),
-                TagResolver.resolver("current_group_online", Tag.inserting(Component.text(connectedGroup
+                        .orElse("..."))),
+                TagResolver.resolver("current_group_online", Tag.preProcessParsed(String.valueOf(connectedGroup
                         .map(this::getGroupOnlineCount)
                         .orElse(0)))),
-                TagResolver.resolver("current_group", Tag.inserting(Component.text(connectedGroup
-                        .orElse("")))),
-                TagResolver.resolver("player", Tag.inserting(Component.text(player.getUsername()))),
-                TagResolver.resolver("ping", Tag.inserting(Component.text(Math.max(0, player.getPing()))))
+                TagResolver.resolver("current_group", Tag.preProcessParsed(connectedGroup.orElse(""))),
+                TagResolver.resolver("player", Tag.preProcessParsed(player.getUsername())),
+                TagResolver.resolver("ping", Tag.preProcessParsed(String.valueOf(Math.max(0, player.getPing()))))
+        ).build();
+    }
+
+    private TagResolver.Builder luckResolver(Player player) {
+        if (!server().getPluginManager().isLoaded("luckperms")) return TagResolver.builder();
+        var user = LuckPermsProvider.get().getPlayerAdapter(Player.class).getUser(player);
+        var group = LuckPermsProvider.get().getGroupManager().getGroup(user.getPrimaryGroup());
+        var meta = user.getCachedData().getMetaData(user.getQueryOptions());
+        var groupName = group != null ? group.getDisplayName() != null ? group.getDisplayName() : group.getName() : "";
+        var prefix = meta.getPrefix() != null ? meta.getPrefix() : "";
+        var suffix = meta.getSuffix() != null ? meta.getSuffix() : "";
+        return TagResolver.builder().resolvers(
+                TagResolver.resolver("group", Tag.preProcessParsed(groupName)),
+                TagResolver.resolver("prefix", Tag.preProcessParsed(prefix)),
+                TagResolver.resolver("suffix", Tag.preProcessParsed(suffix))
         );
     }
 }
