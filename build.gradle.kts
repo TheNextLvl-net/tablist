@@ -1,6 +1,11 @@
 plugins {
     id("java")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.github.goooler.shadow") version "8.1.8"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21;
+    targetCompatibility = JavaVersion.VERSION_21;
 }
 
 group = "net.thenextlvl.tablist"
