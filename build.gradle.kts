@@ -17,7 +17,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.28")
     compileOnly("com.velocitypowered:velocity-api:3.2.0-SNAPSHOT")
 
-    implementation("net.thenextlvl.core:api:3.1.13")
+    implementation("net.thenextlvl.core:files:1.0.5")
 
     annotationProcessor("org.projectlombok:lombok:1.18.28")
     annotationProcessor("com.velocitypowered:velocity-api:3.2.0-SNAPSHOT")
