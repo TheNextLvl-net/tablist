@@ -20,12 +20,12 @@ repositories {
 dependencies {
     compileOnly("net.luckperms:api:5.4")
     compileOnly("org.projectlombok:lombok:1.18.34")
-    compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+    compileOnly("com.velocitypowered:velocity-api:4.0.0-SNAPSHOT")
 
     implementation("net.thenextlvl.core:files:1.0.5")
 
     annotationProcessor("org.projectlombok:lombok:1.18.34")
-    annotationProcessor("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+    annotationProcessor("com.velocitypowered:velocity-api:4.0.0-SNAPSHOT")
 }
 
 tasks.shadowJar {
