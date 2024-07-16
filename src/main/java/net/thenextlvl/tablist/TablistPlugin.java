@@ -11,7 +11,8 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import core.api.file.format.GsonFile;
+import core.file.format.GsonFile;
+import core.io.IO;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -58,16 +59,14 @@ public class TablistPlugin {
     public TablistPlugin(ProxyServer server, Logger logger) {
         this.server = server;
         this.logger = logger;
-        this.config = new GsonFile<>(new File("plugins/Tablist", "config.json"), new GlobalConfig(
+        this.config = new GsonFile<>(IO.of("plugins/Tablist", "config.json"), new GlobalConfig(
                 getDefaultServerConfig(),
                 getDefaultPlayerListConfig(),
                 getDefaultServerGroups(),
                 getDefaultServerNames(),
                 getDefaultGroup(),
                 TimeUnit.SECONDS.toMillis(5)
-        )) {{
-            if (!getFile().exists()) save();
-        }}.getRoot();
+        )).validate().save().getRoot();
         this.miniMessage = MiniMessage.builder().tags(TagResolver.builder()
                 .tag("global_online", (argument, context) -> Tag.preProcessParsed(String.valueOf(server().getPlayerCount())))
                 .tag("global_max", Tag.preProcessParsed(String.valueOf(server().getConfiguration().getShowMaxPlayers())))
