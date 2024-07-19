@@ -26,7 +26,6 @@ import net.thenextlvl.tablist.config.TablistConfig;
 import net.thenextlvl.tablist.listener.ConnectionListener;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
