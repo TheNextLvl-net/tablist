@@ -2,7 +2,7 @@ package net.thenextlvl.tablist.listener;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.ServerPostConnectEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import lombok.RequiredArgsConstructor;
 import net.thenextlvl.tablist.TablistPlugin;
 
@@ -13,8 +13,7 @@ public class ConnectionListener {
     private final TablistPlugin plugin;
 
     @Subscribe
-    @SuppressWarnings("UnstableApiUsage")
-    public void onServerConnect(ServerPostConnectEvent event) {
+    public void onServerConnect(ServerConnectedEvent event) {
         plugin.server().getAllPlayers().forEach(plugin::updateTablist);
     }
 
