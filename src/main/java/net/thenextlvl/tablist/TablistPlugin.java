@@ -137,19 +137,21 @@ public class TablistPlugin {
                         .tabList(player.getTabList())
                         .build())
                 .setDisplayName(miniMessage().deserialize(format, tagResolver(viewed)))
+                .setListOrder(listOrder(viewed))
                 .setLatency((int) Math.max(0, viewed.getPing()));
     }
 
     private void updateGlobalPlayerList(Player player, ServerInfo server) {
-        if (config().globalPlayerList().enabled()) server().getAllPlayers().forEach(all -> {
-            if (all.equals(player)) return;
-            all.getCurrentServer().map(ServerConnection::getServerInfo).ifPresent(info -> {
-                if (!server.equals(info)) getTablist(info).ifPresent(tab -> {
-                    if (!tab.hidePlayers()) addGlobalListEntry(player, all);
-                    addGlobalListEntry(all, player);
-                });
-            });
-        });
+        if (config().globalPlayerList().enabled()) server().getAllPlayers().stream()
+                .filter(all -> !all.equals(player))
+                .forEach(all -> all.getCurrentServer()
+                        .map(ServerConnection::getServerInfo)
+                        .filter(info -> !info.equals(server))
+                        .flatMap(this::getTablist)
+                        .ifPresent(tab -> {
+                            if (!tab.hidePlayers()) addGlobalListEntry(player, all);
+                            addGlobalListEntry(all, player);
+                        }));
     }
 
     private void addGlobalListEntry(Player player, Player viewed) {
@@ -163,7 +165,8 @@ public class TablistPlugin {
                         tagResolver(viewed)
                 ))
                 .setGameMode(config().globalPlayerList().transparent() ? 3 : 2)
-                .setLatency((int) Math.max(0, viewed.getPing()));
+                .setLatency((int) Math.max(0, viewed.getPing()))
+                .setListOrder(-1);
     }
 
     private ServerConfig getDefaultServerConfig() {
@@ -201,13 +204,13 @@ public class TablistPlugin {
     private Map<String, TablistConfig> getDefaultGroup() {
         return Map.of(GlobalConfig.GROUP, new TablistConfig(
                 "<newline><dark_gray>   )<gray><strikethrough>                <reset><dark_gray>[ <gray>• <white>" +
-                        "<server> <gray>• <dark_gray>]<gray><strikethrough>                <reset><dark_gray>(   " +
-                        "<newline><newline><gray>Server <dark_gray>» <aqua><current_server><newline><gray>Players <dark_gray>» " +
-                        "<aqua><global_online><gray>/<aqua><global_max> <dark_gray>• <gray>Ping <dark_gray>» <aqua><ping>ms<newline><green>",
+                "<server> <gray>• <dark_gray>]<gray><strikethrough>                <reset><dark_gray>(   " +
+                "<newline><newline><gray>Server <dark_gray>» <aqua><current_server><newline><gray>Players <dark_gray>» " +
+                "<aqua><global_online><gray>/<aqua><global_max> <dark_gray>• <gray>Ping <dark_gray>» <aqua><ping>ms<newline><green>",
                 "<green><newline><gray>Website <dark_gray>» <aqua><domain><dark_gray><newline><gray>Discord " +
-                        "<dark_gray>» <aqua><discord><newline><dark_gray><newline><dark_gray>)<gray><strikethrough>" +
-                        "                <reset><dark_gray>[ <gray>• <white><server> <gray>• <dark_gray>" +
-                        "]<gray><strikethrough>                <reset><dark_gray>(<newline>",
+                "<dark_gray>» <aqua><discord><newline><dark_gray><newline><dark_gray>)<gray><strikethrough>" +
+                "                <reset><dark_gray>[ <gray>• <white><server> <gray>• <dark_gray>" +
+                "]<gray><strikethrough>                <reset><dark_gray>(<newline>",
                 "<prefix><player><suffix>",
                 false
         ));
@@ -249,5 +252,12 @@ public class TablistPlugin {
                 TagResolver.resolver("prefix", Tag.preProcessParsed(prefix)),
                 TagResolver.resolver("suffix", Tag.preProcessParsed(suffix))
         );
+    }
+
+    private int listOrder(Player player) {
+        if (!server().getPluginManager().isLoaded("luckperms")) return 0;
+        var user = LuckPermsProvider.get().getPlayerAdapter(Player.class).getUser(player);
+        var group = LuckPermsProvider.get().getGroupManager().getGroup(user.getPrimaryGroup());
+        return group != null ? group.getWeight().orElse(0) : 0;
     }
 }
