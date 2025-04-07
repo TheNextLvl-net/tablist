@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
         authors = "NonSwag",
         url = "https://thenextlvl.net",
         // version = "${version}", // figure out how to do that
-        version = "1.1.2",
+        version = "1.1.3",
         dependencies = {
                 @Dependency(
                         id = "luckperms",
