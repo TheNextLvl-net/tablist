@@ -22,12 +22,10 @@ repositories {
 
 dependencies {
     compileOnly("net.luckperms:api:5.4")
-    compileOnly("org.projectlombok:lombok:1.18.36")
     compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 
     implementation("net.thenextlvl.core:files:2.0.2")
 
-    annotationProcessor("org.projectlombok:lombok:1.18.36")
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 }
 

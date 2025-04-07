@@ -13,8 +13,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import core.file.format.GsonFile;
 import core.io.IO;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -34,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-@Getter
-@Accessors(fluent = true)
 @Plugin(id = "tablist",
         name = "Tablist",
         authors = "NonSwag",
@@ -52,12 +48,10 @@ public class TablistPlugin {
     private final MiniMessage miniMessage;
     private final GlobalConfig config;
     private final ProxyServer server;
-    private final Logger logger;
 
     @Inject
     public TablistPlugin(ProxyServer server, Logger logger) {
         this.server = server;
-        this.logger = logger;
         this.config = new GsonFile<>(IO.of("plugins/Tablist", "config.json"), new GlobalConfig(
                 getDefaultServerConfig(),
                 getDefaultPlayerListConfig(),
@@ -259,5 +253,17 @@ public class TablistPlugin {
         var user = LuckPermsProvider.get().getPlayerAdapter(Player.class).getUser(player);
         var group = LuckPermsProvider.get().getGroupManager().getGroup(user.getPrimaryGroup());
         return group != null ? group.getWeight().orElse(0) : 0;
+    }
+
+    public MiniMessage miniMessage() {
+        return miniMessage;
+    }
+
+    public GlobalConfig config() {
+        return config;
+    }
+
+    public ProxyServer server() {
+        return server;
     }
 }

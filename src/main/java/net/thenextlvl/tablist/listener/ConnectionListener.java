@@ -3,14 +3,16 @@ package net.thenextlvl.tablist.listener;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import lombok.RequiredArgsConstructor;
 import net.thenextlvl.tablist.TablistPlugin;
 
 import static com.velocitypowered.api.event.connection.DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN;
 
-@RequiredArgsConstructor
 public class ConnectionListener {
     private final TablistPlugin plugin;
+
+    public ConnectionListener(TablistPlugin plugin) {
+        this.plugin = plugin;
+    }
 
     @Subscribe
     public void onServerConnect(ServerConnectedEvent event) {
