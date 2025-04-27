@@ -24,7 +24,7 @@ dependencies {
     compileOnly("net.luckperms:api:5.4")
     compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 
-    implementation("net.thenextlvl.core:files:2.0.2")
+    implementation("net.thenextlvl.core:files:2.0.3")
 
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 }
