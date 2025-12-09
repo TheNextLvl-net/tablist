@@ -5,14 +5,14 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
-import core.file.format.GsonFile;
-import core.io.IO;
+import core.file.formats.GsonFile;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -24,6 +24,9 @@ import net.thenextlvl.tablist.config.TablistConfig;
 import net.thenextlvl.tablist.listener.ConnectionListener;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +53,16 @@ public class TablistPlugin {
     private final ProxyServer server;
 
     @Inject
-    public TablistPlugin(ProxyServer server, Logger logger) {
+    public TablistPlugin(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) throws IOException {
         this.server = server;
-        this.config = new GsonFile<>(IO.of("plugins/Tablist", "config.json"), new GlobalConfig(
+
+        var old = Path.of("plugins/Tablist/config.json");
+        var configFile = dataFolder.resolve("config.json");
+        if (Files.isRegularFile(old) && Files.notExists(configFile)) {
+            Files.move(old, configFile); // migrate config
+        }
+
+        this.config = new GsonFile<>(configFile, new GlobalConfig(
                 getDefaultServerConfig(),
                 getDefaultPlayerListConfig(),
                 getDefaultServerGroups(),
@@ -197,14 +207,16 @@ public class TablistPlugin {
 
     private Map<String, TablistConfig> getDefaultGroup() {
         return Map.of(GlobalConfig.GROUP, new TablistConfig(
-                "<newline><dark_gray>   )<gray><strikethrough>                <reset><dark_gray>[ <gray>• <white>" +
-                "<server> <gray>• <dark_gray>]<gray><strikethrough>                <reset><dark_gray>(   " +
-                "<newline><newline><gray>Server <dark_gray>» <aqua><current_server><newline><gray>Players <dark_gray>» " +
-                "<aqua><global_online><gray>/<aqua><global_max> <dark_gray>• <gray>Ping <dark_gray>» <aqua><ping>ms<newline><green>",
-                "<green><newline><gray>Website <dark_gray>» <aqua><domain><dark_gray><newline><gray>Discord " +
-                "<dark_gray>» <aqua><discord><newline><dark_gray><newline><dark_gray>)<gray><strikethrough>" +
-                "                <reset><dark_gray>[ <gray>• <white><server> <gray>• <dark_gray>" +
-                "]<gray><strikethrough>                <reset><dark_gray>(<newline>",
+                """
+                        <newline><dark_gray>   )<gray><strikethrough>                <reset><dark_gray>[ <gray>• <white>\
+                        <server> <gray>• <dark_gray>]<gray><strikethrough>                <reset><dark_gray>(   \
+                        <newline><newline><gray>Server <dark_gray>» <aqua><current_server><newline><gray>Players <dark_gray>» \
+                        <aqua><global_online><gray>/<aqua><global_max> <dark_gray>• <gray>Ping <dark_gray>» <aqua><ping>ms<newline><green>""",
+                """
+                        <green><newline><gray>Website <dark_gray>» <aqua><domain><dark_gray><newline><gray>Discord \
+                        <dark_gray>» <aqua><discord><newline><dark_gray><newline><dark_gray>)<gray><strikethrough>\
+                                        <reset><dark_gray>[ <gray>• <white><server> <gray>• <dark_gray>\
+                        ]<gray><strikethrough>                <reset><dark_gray>(<newline>""",
                 "<prefix><player><suffix>",
                 false
         ));

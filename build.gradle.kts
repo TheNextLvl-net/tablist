@@ -17,6 +17,7 @@ version = "1.1.3"
 repositories {
     mavenCentral()
     maven("https://repo.thenextlvl.net/releases")
+    maven("https://repo.thenextlvl.net/snapshots")
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
@@ -24,7 +25,7 @@ dependencies {
     compileOnly("net.luckperms:api:5.5")
     compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 
-    implementation("net.thenextlvl.core:files:3.0.1")
+    implementation("net.thenextlvl.core:files:4.0.0-pre1")
 
     annotationProcessor("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
 }
