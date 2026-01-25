@@ -23,11 +23,11 @@ repositories {
 
 dependencies {
     compileOnly("net.luckperms:api:5.5")
-    compileOnly("com.velocitypowered:velocity-api:3.4.0")
+    compileOnly("com.velocitypowered:velocity-api:3.5.0-SNAPSHOT")
 
     implementation("net.thenextlvl.core:files:4.0.0-pre1")
 
-    annotationProcessor("com.velocitypowered:velocity-api:3.4.0")
+    annotationProcessor("com.velocitypowered:velocity-api:3.5.0-SNAPSHOT")
 }
 
 tasks.shadowJar {
